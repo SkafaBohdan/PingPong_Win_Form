@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Pong
@@ -42,7 +36,7 @@ namespace Pong
 
             if (g.stopGame > 0)
             {
-                // Остановить игру и вывести счёт
+                // Остановить игру и вывести счёт(гейм овер)
                 aTimer.Enabled = false;
                 aTimer.Interval = 2000;
                 aTimer.Enabled = true;
@@ -63,7 +57,7 @@ namespace Pong
         private void PingPongForm_Paint(object sender, PaintEventArgs e)
         {
             g.paint(e);
-            scoreLabel.Text = String.Format("Player 1 v Player 2\r\n       {0} - {1}", g.player1Score, g.player2Score);
+            scoreLabel.Text = String.Format("Game Over!");
             scoreLabel.Visible = (g.stopGame > 0);
         }
         private void PongForm_Load(object sender, EventArgs e)
@@ -73,28 +67,21 @@ namespace Pong
     }
 
 
-class PingPongGame
+    class PingPongGame
     {
         private Player p1;
-        private Player p2;
         private Ball b;
-        public int player1Score = 0;
-        public int player2Score = 0;
         public int stopGame = 0;
 
         public PingPongGame(Size clientSize)
         {
-            int wall_offset = 100;
+            int wall_offset = 25;
             Size playerSize = new Size(20, 100);
             Size ballSize = new Size(20, 20);
 
             p1 = new Player(
                 new Rectangle(wall_offset, clientSize.Height / 2 - playerSize.Height / 2, playerSize.Width, playerSize.Height),
                 clientSize, Keys.W, Keys.S);
-            p2 = new Player(
-                new Rectangle(clientSize.Width - wall_offset - playerSize.Width,
-                clientSize.Height / 2 - playerSize.Height / 2, playerSize.Width, playerSize.Height),
-                clientSize, Keys.Up, Keys.Down);
             b = new Ball(
                 new Rectangle(wall_offset, clientSize.Height - wall_offset, ballSize.Width, ballSize.Height),
                 clientSize);
@@ -102,21 +89,9 @@ class PingPongGame
 
         public void update_pos()
         {
-            stopGame = b.update_pos(p1, p2);
-            if (stopGame > 0)
-            {
-                if (stopGame == 1)
-                {
-                    player1Score++;
-                }
-                else if (stopGame == 2)
-                {
-                    player2Score++;
-                }
-                return;
-            }
+            stopGame = b.update_pos(p1);
             p1.update_pos(b);
-            p2.update_pos(b);
+            //p2.update_pos(b);
         }
 
         public void resetBall()
@@ -126,16 +101,14 @@ class PingPongGame
 
         public void update_key(KeyEventArgs e, bool down)
         {
-            // Обновление направления движения каждого игрока
+            // Обновление направления движения игрока
             p1.update_key(e.KeyCode, down);
-            p2.update_key(e.KeyCode, down);
         }
 
         public void paint(PaintEventArgs e)
         {
-            // Покраска игроков и мяча
-            e.Graphics.FillRectangle(Brushes.BlueViolet, p2.r);
-            e.Graphics.FillRectangle(Brushes.BlueViolet, p1.r);
+            // цвет мяча и игрока
+            e.Graphics.FillRectangle(Brushes.Green, p1.r);
             e.Graphics.FillRectangle(Brushes.Blue, b.r);
         }
     }
@@ -172,7 +145,7 @@ class PingPongGame
                     r.Y -= speed;
                     if (this.r.IntersectsWith(b.r))
                     {
-                        r.Y += speed; // Undo
+                        r.Y += speed; 
                     }
                 }
                 else
@@ -187,7 +160,7 @@ class PingPongGame
                     r.Y += speed;
                     if (this.r.IntersectsWith(b.r))
                     {
-                        r.Y -= speed; // Undo
+                        r.Y -= speed; 
                     }
                 }
                 else
@@ -219,6 +192,7 @@ class PingPongGame
         Size enclosing;
         Rectangle top_wall;
         Rectangle bot_wall;
+        Rectangle right_wall;
 
         public Ball(Rectangle r, Size enclosing)
         {
@@ -227,6 +201,7 @@ class PingPongGame
             int wall_thickness = 100;
             top_wall = new Rectangle(0, -wall_thickness, enclosing.Width, wall_thickness);
             bot_wall = new Rectangle(0, enclosing.Height, enclosing.Width, wall_thickness);
+            right_wall = new Rectangle(enclosing.Width-2, 0, wall_thickness, enclosing.Height);
             reset();
         }
 
@@ -238,28 +213,22 @@ class PingPongGame
             r.Y = enclosing.Height / 2;
             dx = rnd.Next(0, 7) - 3;
             dy = rnd.Next(0, 7) - 3;
-            //if (dx == 0)
-            //    dx = 1;
-            //if (dy == 0)
-            //    dy = -1;
-            dx = (dx == 0) ? 1 : dx;
-            dy = (dy == 0) ? -1 : dy;
+            if (dx == 0)
+                dx = 1;
+            if (dy == 0)
+                dy = -1;
         }
 
-        public int update_pos(Player p1, Player p2)
+        public int update_pos (Player p1)
         {
             // Обновления позиции мяча
             r.X += dx;
             r.Y += dy;
 
-            // Проверка, не проскользнул ли мяч через кого-либо из игроков
+            // Проверка, не проскользнул ли мяч через игрока
             if (r.Left < 0)
             {
                 return 2;
-            }
-            else if (r.Right > enclosing.Width)
-            {
-                return 1;
             }
 
             // Проверка, касается ли мяч верхней или нижней стенки
@@ -267,15 +236,16 @@ class PingPongGame
             {
                 dy = -dy;
             }
-
-            if (r.IntersectsWith(p1.r)) // Отскок от игрока 1
+            if (r.IntersectsWith(right_wall))
+            {
+                dx = -dx;
+            }
+            // Проверка, касается ли мяч правой стенки
+            if (r.IntersectsWith(p1.r)) // Отскок от игрока 
             {
                 bounceWith(p1);
             }
-            else if (r.IntersectsWith(p2.r)) // Отскок от игрока 2
-            {
-                bounceWith(p2);
-            }
+   
             return 0;
         }
 
@@ -289,12 +259,7 @@ class PingPongGame
                 dx = -Math.Abs(dx);
                 dy = -dy;
             }
-            else if (dx < 0 && r.Right + dx > p.r.Left)
-            {
-                // Если отскакивает верх или низ игрок 2
-                dx = Math.Abs(dx);
-                dy = -dy;
-            }
+
             else
             {
                 // Отскок с вертикальным краем игрока

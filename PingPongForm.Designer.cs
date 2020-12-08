@@ -35,18 +35,18 @@
             // 
             this.scoreLabel.AutoSize = true;
             this.scoreLabel.Font = new System.Drawing.Font("Consolas", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.scoreLabel.Location = new System.Drawing.Point(230, 182);
+            this.scoreLabel.Location = new System.Drawing.Point(179, 205);
             this.scoreLabel.Name = "scoreLabel";
-            this.scoreLabel.Size = new System.Drawing.Size(518, 112);
+            this.scoreLabel.Size = new System.Drawing.Size(284, 56);
             this.scoreLabel.TabIndex = 1;
-            this.scoreLabel.Text = "Player 1 v Player 2\r\n       0 - 0";
+            this.scoreLabel.Text = "Game Over!";
             this.scoreLabel.Visible = false;
             // 
             // PingPongForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1000, 550);
+            this.ClientSize = new System.Drawing.Size(639, 499);
             this.Controls.Add(this.scoreLabel);
             this.DoubleBuffered = true;
             this.Name = "PingPongForm";
